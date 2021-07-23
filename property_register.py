@@ -21,7 +21,7 @@ def parse(data, location):
     parsed = re.findall(r'\[.*,]', str(soup))[0]
     parsed = ast.literal_eval(parsed)
 
-    print(parsed)
+    print(parsed) 
 
 #     store_to_db(parsed, location)    
 
