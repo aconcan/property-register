@@ -3,6 +3,9 @@ import requests
 import ast
 import re
 import sqlite3
+import os
+from dotenv import load_dotenv
+from twilio.rest import Client
 
 locations = ['Dun Laoghaire', 'Glenageary', 'Sallynoggin'] 
 
@@ -51,8 +54,29 @@ def store_to_db(parsed, location):
     con.commit()
     con.close()
 
+    if new_sales:
+        send_text(new_sales, location)
+    else:
+        send_text(f' Nothing to report', location)
+
+
+# Send a text with sales updates using Twilio
+# Update with environment variables
+def send_text(new_sales, location):
+    load_dotenv()
+
+    account_sid = os.getenv('ACCOUNT_SID')
+    auth_token  = os.getenv('AUTH_TOKEN')
+
+    client = Client(account_sid, auth_token)
+
+    message = client.messages.create(
+        to=os.getenv('AIMEE_PHONE'), 
+        from_=os.getenv('TWILIO_PHONE'),
+        body=f"New sales for {location}: {new_sales}")
+
+    print(message.sid)
 
 pull()
 
 
-# Define Twilio function to send a text with housing sales updates to phone

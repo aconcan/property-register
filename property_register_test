@@ -1,0 +1,5 @@
+import unittest
+import property_register
+
+class PropertyTest(unittest.TestCase):
+ def test_
