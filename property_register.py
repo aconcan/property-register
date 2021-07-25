@@ -57,7 +57,7 @@ def store_to_db(parsed, location):
     if new_sales:
         send_text(new_sales, location)
     else:
-        send_text(f' Nothing to report', location)
+        send_text(f'Nothing new to report', location)
 
 
 # Send a text with sales updates using Twilio
@@ -66,7 +66,7 @@ def send_text(new_sales, location):
     load_dotenv()
 
     account_sid = os.getenv('ACCOUNT_SID')
-    auth_token  = os.getenv('AUTH_TOKEN')
+    auth_token = os.getenv('AUTH_TOKEN')
 
     client = Client(account_sid, auth_token)
 
