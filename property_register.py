@@ -51,8 +51,16 @@ def store_to_db(parsed, location):
     con.commit()
     con.close()
 
+    send_text(new_sales)
+
+
+# Send a text with sales updates using Twilio
+def send_text(new_sales):
+
+
+
+
 
 pull()
 
 
-# Define Twilio function to send a text with housing sales updates to phone
