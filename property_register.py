@@ -4,8 +4,7 @@ import ast
 import re
 import sqlite3
 
-
-locations = ['Dun%20Laoghaire', 'Glenageary', 'Sallynoggin']
+locations = ['Dun Laoghaire', 'Glenageary', 'Sallynoggin'] 
 
 # retrieve for each location
 def pull(): 
@@ -13,43 +12,63 @@ def pull():
         data = requests.get(url=f'https://www.propertypriceregister.ie/Website/npsra/PPR/npsra-ppr.nsf/PPR-By-Date&Start=1&Query=%5Bdt_execution_date%5D%3E=01/01/2021%20AND%20%5Bdt_execution_date%5D%3C01/01/2022%20AND%20%5Baddress%5D=*{location}*%20AND%20%5Bdc_county%5D=Dublin&County=Dublin&Year=2021&StartMonth=01&EndMonth=&Address={location}', verify=False)
         parse(data, location)
 
-def parse(data, location):
 
+def parse(data, location):
     soup = BeautifulSoup(data.text, 'html.parser')
-    # print(soup.prettify())
     soup = soup.find_all('script', type='text/javascript')[5]
+    
     parsed = re.findall(r'\[.*,]', str(soup))[0]
     parsed = ast.literal_eval(parsed)
 
-    print(parsed) 
+    store_to_db(parsed, location)    
 
-#     store_to_db(parsed, location)    
 
-# def store_to_db(location):
+def store_to_db(parsed, location):
+    new_sales = []
 
-#     con = sqlite3.connect('example.db')
-#     # Create table
-#     cur.execute('''CREATE TABLE stocks
-#                 (date text, trans text, symbol text, qty real, price real)''')
-
-#     # Insert a row of data
-#     cur.execute("INSERT INTO stocks VALUES ('2006-01-05','BUY','RHAT',100,35.14)")
-
-#     # Save (commit) the changes
-#     con.commit()
-
-#     # We can also close the connection if we are done with it.
-#     # Just be sure any changes have been committed or they will be lost.
-#     con.close()
+    # Parse spaces for table name creation
+    location = location.replace(' ', '')
     
+    # Set up connection 
+    con = sqlite3.connect('locations.db')
+    cur = con.cursor()
+    
+    # Create table if doesn't exist already
+    cur.execute(f'''CREATE TABLE IF NOT EXISTS {location} (
+            date TEXT,
+            price TEXT,
+            link TEXT UNIQUE PRIMARY KEY)''')
+    
+    # Add new sales to array
+    for sale in parsed:
+        sale[2] = sale[2].replace('"', '')
+        sale[2] = sale[2].replace("'", '')
+        
+        if not cur.execute(f'SELECT * from {location} WHERE link LIKE "{sale[2]}"'): 
+            new_sales.append(sale)
+            cur.execute(f'INSERT INTO {location} VALUES ("{sale[0]}", "{sale[1]}", "{sale[2]}")')
 
+    con.commit()
+    print('gag')
+    print(new_sales)
+        
+        # (SELECT * FROM {location} WHERE link LIKE "{sale[2]}")
 
-# parse function
+    # for item in cur.execute(f'SELECT * FROM Glenageary WHERE link LIKE "{sale[2]}"'):
+    #         print(item)
+    
+    # except:
+    #     print('exception')
+        
 
-# check if db exists
-# if not create new
-# if so, obtain a list of everything updated
-# update db
+    # # If error thrown update existing database and track changes
+    # except:
+    #     for sale in parsed:
+    #         cur.execute(f"INSERT INTO {location} VALUES ('{sale[0]}','{sale[1]}','{sale[2]}')")
+    #         # Save changes
+    #         con.commit()
 
-
+    # # Close connection after changes have been committed
+    # con.close()
+    
 pull()
